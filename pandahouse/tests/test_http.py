@@ -24,7 +24,7 @@ def test_wrong_host():
 
 
 def test_wrong_query(host):
-    query = 'DESC system.parts FORMAT unkownformat'
+    query = 'SELECT * FROM default.nonexisting'
     with pytest.raises(ClickhouseException):
         execute(query, host=host)
 

@@ -11,4 +11,5 @@ pipeline:
   build:
     image: ${PYTHON_IMAGE}
     commands:
+      - conda install -y pandas numpy requests
       - python setup.py test

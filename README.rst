@@ -17,14 +17,14 @@ Install
 Usage
 -----
 
-Writing
+Writing dataframe to clickhouse
 
 .. code:: python
 
     affected_rows = to_clickhouse(df, table='name', database='test', host=host)
 
 
-Reading
+Reading arbitrary clickhouse query to pandas
 
 .. code:: python
 

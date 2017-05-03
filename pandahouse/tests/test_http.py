@@ -1,6 +1,6 @@
 import pytest
 
-from requests.exceptions import ConnectionError
+from requests.exceptions import RequestException, ConnectionError
 from pandahouse.http import execute, ClickhouseException
 
 
@@ -25,7 +25,5 @@ def test_wrong_host():
 
 def test_wrong_query(host):
     query = 'SELECT * FROM default.nonexisting'
-    with pytest.raises(ClickhouseException):
+    with pytest.raises((ClickhouseException, RequestException)):
         execute(query, host=host)
-
-

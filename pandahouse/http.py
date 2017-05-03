@@ -1,5 +1,6 @@
 import requests
 
+from requests.exceptions import RequestException
 from toolz import valfilter
 
 
@@ -22,8 +23,13 @@ def execute(query, host, data=None, external={}, user=None,
         data = data.encode('utf-8')
     response = requests.post(host, params=params, data=data, stream=stream)
 
-    if response.status_code != 200:
-        raise ClickhouseException(response.content)
+    try:
+        response.raise_for_status()
+    except RequestException as e:
+        if response.content:
+            raise ClickhouseException(response.content)
+        else:
+            raise e
 
     if stream:
         return response.raw

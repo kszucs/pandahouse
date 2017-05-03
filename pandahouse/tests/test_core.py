@@ -18,7 +18,18 @@ def df():
 
 
 @pytest.yield_fixture(scope='module', autouse=True)
-def table(host):
+def database(host):
+    # TODO: test every dtyped from .utils
+    create = 'CREATE DATABASE IF NOT EXISTS test'
+    drop = 'DROP DATABASE IF EXISTS test'
+    try:
+        yield execute(create, host)
+    finally:
+        execute(drop, host)
+
+
+@pytest.yield_fixture(scope='module', autouse=True)
+def table(host, database):
     # TODO: test every dtyped from .utils
     create = '''
         CREATE TABLE IF NOT EXISTS test.decimals (

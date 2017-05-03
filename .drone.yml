@@ -1,0 +1,14 @@
+matrix:
+  PYTHON_IMAGE:
+    - kszucs/miniconda2
+    - kszucs/miniconda3
+
+services:
+  clickhouse:
+    image: yandex/clickhouse-server
+
+pipeline:
+  build:
+    image: ${PYTHON_VERSION}
+    commands:
+      - python setup.py test

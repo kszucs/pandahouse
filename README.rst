@@ -9,9 +9,10 @@ Pandas interface for Clickhouse HTTP API
 Install
 -------
 
-```bash
-pip install pandahouse
-```
+.. code:: bash
+
+    pip install pandahouse
+
 
 Usage
 -----
@@ -30,6 +31,7 @@ Writing
 Reading
 
 .. code:: python
+
     df = read_clickhouse('SELECT * FROM {db}.table', index_col='id',
                          database='test', host=host)
 

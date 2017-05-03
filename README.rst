@@ -17,15 +17,11 @@ Install
 Usage
 -----
 
-Given the addressbook protobuf definition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Writing
 
 .. code:: python
 
-    affected_rows = to_clickhouse(df, table='name',
-                                  database='test', host=host)
+    affected_rows = to_clickhouse(df, table='name', database='test', host=host)
 
 
 Reading

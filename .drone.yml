@@ -9,6 +9,6 @@ services:
 
 pipeline:
   build:
-    image: ${PYTHON_VERSION}
+    image: ${PYTHON_IMAGE}
     commands:
       - python setup.py test

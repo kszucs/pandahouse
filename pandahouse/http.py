@@ -21,7 +21,8 @@ def execute(query, host, data=None, external={}, user=None,
 
     if data is not None:
         data = data.encode('utf-8')
-    response = requests.post(host, params=params, data=data, stream=stream)
+    response = requests.post(host, params=params, data=data,
+                             stream=stream, files=files)
 
     try:
         response.raise_for_status()

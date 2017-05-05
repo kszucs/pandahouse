@@ -3,6 +3,7 @@
 from os.path import exists
 from setuptools import setup
 
+
 setup(name='pandahouse',
       version='0.1',
       description='Pandas interface for Clickhouse HTTP API',

@@ -51,7 +51,7 @@ def read_clickhouse(query, host, tables={}, database='default',
 
     Additional keyword arguments passed to `pandas.read_table`
     """
-    query = query.format(db=escape(database)).strip(' ;')
+    query = query.format(db=escape(database)).strip().strip(';')
     query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
 
     external = {}

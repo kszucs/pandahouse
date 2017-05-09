@@ -2,5 +2,6 @@ import pytest
 
 
 @pytest.fixture(scope='session')
-def host():
-    return 'http://localhost:8123'
+def connection():
+    return {'host': 'http://localhost:8123',
+            'database': 'test'}

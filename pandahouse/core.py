@@ -26,8 +26,7 @@ def serialize(df):
                      encoding='utf-8')
 
 
-def read_clickhouse(query, host, tables={}, database='default',
-                    user=None, password=None, index=True, **kwargs):
+def read_clickhouse(query, index=True, tables={}, connection={}, **kwargs):
     """Reads clickhouse query to pandas dataframe
 
     Parameters
@@ -51,7 +50,7 @@ def read_clickhouse(query, host, tables={}, database='default',
 
     Additional keyword arguments passed to `pandas.read_table`
     """
-    query = query.format(db=escape(database)).strip().strip(';')
+    query = query.strip().strip(';')
     query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
 
     external = {}
@@ -62,8 +61,8 @@ def read_clickhouse(query, host, tables={}, database='default',
         structure = ', '.join(map(' '.join, dtypes.items()))
         external[name] = (structure, data)
 
-    lines = execute(query, external=external, host=host,
-                    user=user, password=password, stream=True)
+    lines = execute(query, external=external, stream=True,
+                    connection=connection)
 
     names = lines.readline().decode('utf-8').strip().split('\t')
     types = lines.readline().decode('utf-8').strip().split('\t')
@@ -80,14 +79,12 @@ def read_clickhouse(query, host, tables={}, database='default',
                          **kwargs)
 
 
-def to_clickhouse(df, table, host, database='default', user=None,
-                  password=None, index=True, chunksize=1000):
-    insert = 'INSERT INTO {database}.{table} ({columns}) FORMAT CSV'
+def to_clickhouse(df, table, index=True, chunksize=1000, connection={}):
+    insert = 'INSERT INTO {db}.{table} ({columns}) FORMAT CSV'
     dtypes, df = prepare(df, index=index)
 
     columns = ', '.join(map(escape, dtypes.keys()))
-    query = insert.format(columns=columns, table=escape(table),
-                          database=escape(database))
+    query = insert.format(db='{db}', columns=columns, table=escape(table))
 
     nrows = df.shape[0]
     nchunks = int(nrows / chunksize) + 1
@@ -98,7 +95,6 @@ def to_clickhouse(df, table, host, database='default', user=None,
             break
 
         chunk = df.ix[start_i:end_i]
-        execute(query, data=serialize(chunk),
-                host=host, user=user, password=password)
+        execute(query, data=serialize(chunk), connection=connection)
 
     return nrows

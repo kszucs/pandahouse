@@ -18,18 +18,18 @@ def df():
 
 
 @pytest.yield_fixture(scope='module', autouse=True)
-def database(host):
+def database(connection):
     # TODO: test every dtyped from .utils
     create = 'CREATE DATABASE IF NOT EXISTS test'
     drop = 'DROP DATABASE IF EXISTS test'
     try:
-        yield execute(create, host)
+        yield execute(create, connection=connection)
     finally:
-        execute(drop, host)
+        execute(drop, connection=connection)
 
 
 @pytest.yield_fixture(scope='module', autouse=True)
-def table(host, database):
+def table(connection, database):
     # TODO: test every dtyped from .utils
     create = '''
         CREATE TABLE IF NOT EXISTS test.decimals (
@@ -38,24 +38,23 @@ def table(host, database):
     '''
     drop = 'DROP TABLE IF EXISTS test.decimals'
     try:
-        yield execute(create, host)
+        yield execute(create, connection=connection)
     finally:
-        execute(drop, host)
+        execute(drop, connection=connection)
 
 
-def test_insert(df, host):
-    affected_rows = to_clickhouse(df, table='decimals',
-                                  database='test', host=host)
+def test_insert(df, connection):
+    affected_rows = to_clickhouse(df, table='decimals', connection=connection)
     assert affected_rows == 100
 
     df_ = read_clickhouse('SELECT * FROM {db}.decimals', index_col='A',
-                          database='test', host=host)
+                          connection=connection)
     assert df.shape == df_.shape
     assert df.columns.tolist() == df_.columns.tolist()
 
 
-def test_query(df, host):
+def test_query(df, connection):
     df_ = read_clickhouse('SELECT B, C FROM {db}.decimals', index_col='B',
-                          database='test', host=host)
+                          connection=connection)
     assert df_.shape == (100, 1)
 

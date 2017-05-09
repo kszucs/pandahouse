@@ -1,16 +1,24 @@
 import requests
 
 from requests.exceptions import RequestException
-from toolz import valfilter
+from toolz import valfilter, merge
+
+from .utils import escape
+
+
+_default = dict(host='http://localhost:8123', database='default',
+                user=None, password=None)
 
 
 class ClickhouseException(Exception):
     pass
 
 
-def execute(query, host, data=None, external={}, user=None,
-            password=None, stream=False):
-    params = {'query': query, 'user': user, 'password': password}
+def execute(query, connection={}, data=None, external={}, stream=False):
+    connection = merge(_default, connection)
+    params = {'query': query.format(db=escape(connection['database'])),
+              'user': connection['user'],
+              'password': connection['password']}
     params = valfilter(lambda x: x, params)
 
     files = {}
@@ -21,7 +29,7 @@ def execute(query, host, data=None, external={}, user=None,
 
     if data is not None:
         data = data.encode('utf-8')
-    response = requests.post(host, params=params, data=data,
+    response = requests.post(connection['host'], params=params, data=data,
                              stream=stream, files=files)
 
     try:

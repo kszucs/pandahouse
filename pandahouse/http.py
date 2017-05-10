@@ -14,9 +14,11 @@ class ClickhouseException(Exception):
     pass
 
 
-def execute(query, connection={}, data=None, external={}, stream=False):
+def prepare(query, connection={}, external={}):
     connection = merge(_default, connection)
-    params = {'query': query.format(db=escape(connection['database'])),
+    database = escape(connection['database'])
+    query = query.format(db=database)
+    params = {'query': query,
               'user': connection['user'],
               'password': connection['password']}
     params = valfilter(lambda x: x, params)
@@ -27,9 +29,17 @@ def execute(query, connection={}, data=None, external={}, stream=False):
         params['{}_structure'.format(name)] = structure
         files[name] = serialized
 
+    host = connection['host']
+
+    return host, params, files
+
+
+def execute(query, connection={}, data=None, external={}, stream=False):
+    host, params, files = prepare(query, connection, external=external)
     if data is not None:
         data = data.encode('utf-8')
-    response = requests.post(connection['host'], params=params, data=data,
+
+    response = requests.post(host, params=params, data=data,
                              stream=stream, files=files)
 
     try:

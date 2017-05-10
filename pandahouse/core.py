@@ -7,7 +7,7 @@ from .http import execute
 from .utils import PD2CH, CH2PD, escape
 
 
-def prepare(df, index=True):
+def normalize(df, index=True):
     if index:
         df = df.reset_index()
 
@@ -21,12 +21,66 @@ def prepare(df, index=True):
     return dtypes, df
 
 
-def serialize(df):
+def to_csv(df):
     return df.to_csv(header=False, index=False, quoting=csv.QUOTE_NONNUMERIC,
                      encoding='utf-8')
 
 
-def read_clickhouse(query, index=True, tables={}, connection={}, **kwargs):
+def partition(df, chunksize=1000):
+    nrows = df.shape[0]
+    nchunks = int(nrows / chunksize) + 1
+    for i in range(nchunks):
+        start_i = i * chunksize
+        end_i = min((i + 1) * chunksize, nrows)
+        if start_i >= end_i:
+            break
+
+        chunk = df.ix[start_i:end_i]
+        yield chunk
+
+
+def selection(query, tables={}, index=True):
+    query = query.strip().strip(';')
+    query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
+
+    external = {}
+    for name, df in tables.items():
+        dtypes, df = normalize(df, index=index)
+        # dtypes = keymap(escape, dtypes)
+        data = to_csv(df)
+        structure = ', '.join(map(' '.join, dtypes.items()))
+        external[name] = (structure, data)
+
+    return query, external
+
+
+def insertion(df, table, index=True):
+    insert = 'INSERT INTO {db}.{table} ({columns}) FORMAT CSV'
+    dtypes, df = normalize(df, index=index)
+
+    columns = ', '.join(map(escape, dtypes.keys()))
+    query = insert.format(db='{db}', columns=columns, table=escape(table))
+
+    return query, df
+
+
+def parse(lines, **kwargs):
+    names = lines.readline().decode('utf-8').strip().split('\t')
+    types = lines.readline().decode('utf-8').strip().split('\t')
+    dtypes, dtimes = {}, []
+    for name, chtype in zip(names, types):
+        dtype = CH2PD[chtype]
+        if dtype.startswith('datetime'):
+            dtimes.append(name)
+        else:
+            dtypes[name] = dtype
+
+    return pd.read_table(lines, header=None, names=names,
+                         dtype=dtypes, parse_dates=dtimes,
+                         **kwargs)
+
+
+def read_clickhouse(query, tables={}, index=True, connection={}, **kwargs):
     """Reads clickhouse query to pandas dataframe
 
     Parameters
@@ -50,51 +104,15 @@ def read_clickhouse(query, index=True, tables={}, connection={}, **kwargs):
 
     Additional keyword arguments passed to `pandas.read_table`
     """
-    query = query.strip().strip(';')
-    query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
-
-    external = {}
-    for name, df in tables.items():
-        dtypes, df = prepare(df, index=index)
-        dtypes = keymap(escape, dtypes)
-        data = serialize(df)
-        structure = ', '.join(map(' '.join, dtypes.items()))
-        external[name] = (structure, data)
-
+    query, external = selection(query, tables=tables, index=index)
     lines = execute(query, external=external, stream=True,
                     connection=connection)
-
-    names = lines.readline().decode('utf-8').strip().split('\t')
-    types = lines.readline().decode('utf-8').strip().split('\t')
-    dtypes, dtimes = {}, []
-    for name, chtype in zip(names, types):
-        dtype = CH2PD[chtype]
-        if dtype.startswith('datetime'):
-            dtimes.append(name)
-        else:
-            dtypes[name] = dtype
-
-    return pd.read_table(lines, header=None, names=names,
-                         dtype=dtypes, parse_dates=dtimes,
-                         **kwargs)
+    return parse(lines, **kwargs)
 
 
 def to_clickhouse(df, table, index=True, chunksize=1000, connection={}):
-    insert = 'INSERT INTO {db}.{table} ({columns}) FORMAT CSV'
-    dtypes, df = prepare(df, index=index)
+    query, df = insertion(df, table, index=index)
+    for chunk in partition(df, chunksize=chunksize):
+        execute(query, data=to_csv(chunk), connection=connection)
 
-    columns = ', '.join(map(escape, dtypes.keys()))
-    query = insert.format(db='{db}', columns=columns, table=escape(table))
-
-    nrows = df.shape[0]
-    nchunks = int(nrows / chunksize) + 1
-    for i in range(nchunks):
-        start_i = i * chunksize
-        end_i = min((i + 1) * chunksize, nrows)
-        if start_i >= end_i:
-            break
-
-        chunk = df.ix[start_i:end_i]
-        execute(query, data=serialize(chunk), connection=connection)
-
-    return nrows
+    return df.shape[0]

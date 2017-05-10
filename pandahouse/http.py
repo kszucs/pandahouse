@@ -22,8 +22,8 @@ def execute(query, connection={}, data=None, external={}, stream=False):
     params = valfilter(lambda x: x, params)
 
     files = {}
-    for name, (structure, format, serialized) in external.items():
-        params['{}_format'.format(name)] = format
+    for name, (structure, serialized) in external.items():
+        params['{}_format'.format(name)] = 'CSV'
         params['{}_structure'.format(name)] = structure
         files[name] = serialized
 

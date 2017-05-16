@@ -18,6 +18,7 @@ MAPPING = {'object': 'String',
 
 PD2CH = keymap(np.dtype, MAPPING)
 CH2PD = itemmap(reversed, MAPPING)
+CH2PD['Null'] = 'object'
 
 
 SPECIAL_CHARS = {

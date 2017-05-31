@@ -35,7 +35,7 @@ def partition(df, chunksize=1000):
         if start_i >= end_i:
             break
 
-        chunk = df.ix[start_i:end_i]
+        chunk = df.iloc[start_i:end_i]
         yield chunk
 
 

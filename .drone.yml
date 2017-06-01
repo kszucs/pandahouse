@@ -5,7 +5,7 @@ matrix:
 
 services:
   clickhouse:
-    image: yandex/clickhouse-server
+    image: lensa/clickhouse
 
 pipeline:
   build:

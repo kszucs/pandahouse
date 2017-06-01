@@ -8,8 +8,10 @@ services:
     image: lensa/clickhouse
 
 pipeline:
-  build:
+  test:
     image: ${PYTHON_IMAGE}
+    environment:
+      - CLICKHOUSE=http://clickhouse:8123
     commands:
       - conda install -y -q libgcc pandas numpy requests
       - python setup.py test

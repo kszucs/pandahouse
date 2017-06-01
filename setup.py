@@ -5,7 +5,7 @@ from setuptools import setup
 
 
 setup(name='pandahouse',
-      version='0.2.3',
+      version='0.2.4',
       description='Pandas interface for Clickhouse HTTP API',
       url='http://github.com/kszucs/pandahouse',
       maintainer='Krisztian Szucs',

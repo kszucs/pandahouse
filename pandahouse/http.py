@@ -14,8 +14,8 @@ class ClickhouseException(Exception):
     pass
 
 
-def prepare(query, connection={}, external={}):
-    connection = merge(_default, connection)
+def prepare(query, connection=None, external=None):
+    connection = merge(_default, connection or {})
     database = escape(connection['database'])
     query = query.format(db=database)
     params = {'query': query,
@@ -24,6 +24,7 @@ def prepare(query, connection={}, external={}):
     params = valfilter(lambda x: x, params)
 
     files = {}
+    external = external or {}
     for name, (structure, serialized) in external.items():
         params['{}_format'.format(name)] = 'CSV'
         params['{}_structure'.format(name)] = structure
@@ -34,7 +35,7 @@ def prepare(query, connection={}, external={}):
     return host, params, files
 
 
-def execute(query, connection={}, data=None, external={}, stream=False):
+def execute(query, connection=None, data=None, external=None, stream=False):
     host, params, files = prepare(query, connection, external=external)
     if data is not None:
         data = data.encode('utf-8')

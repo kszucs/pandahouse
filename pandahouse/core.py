@@ -39,11 +39,12 @@ def partition(df, chunksize=1000):
         yield chunk
 
 
-def selection(query, tables={}, index=True):
+def selection(query, tables=None, index=True):
     query = query.strip().strip(';')
     query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
 
     external = {}
+    tables = tables or {}
     for name, df in tables.items():
         dtypes, df = normalize(df, index=index)
         # dtypes = keymap(escape, dtypes)
@@ -80,7 +81,7 @@ def parse(lines, **kwargs):
                          **kwargs)
 
 
-def read_clickhouse(query, tables={}, index=True, connection={}, **kwargs):
+def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):
     """Reads clickhouse query to pandas dataframe
 
     Parameters
@@ -110,7 +111,7 @@ def read_clickhouse(query, tables={}, index=True, connection={}, **kwargs):
     return parse(lines, **kwargs)
 
 
-def to_clickhouse(df, table, index=True, chunksize=1000, connection={}):
+def to_clickhouse(df, table, index=True, chunksize=1000, connection=None):
     query, df = insertion(df, table, index=index)
     for chunk in partition(df, chunksize=chunksize):
         execute(query, data=to_csv(chunk), connection=connection)

@@ -1,10 +1,10 @@
 import csv
 
 import pandas as pd
-from toolz import keymap, valmap
+from toolz import valmap
 
 from .http import execute
-from .utils import PD2CH, CH2PD, escape
+from .utils import PD2CH, CH2PD, escape, decode_escape_sequences
 
 
 def normalize(df, index=True):
@@ -23,7 +23,7 @@ def normalize(df, index=True):
 
 def to_csv(df):
     return df.to_csv(header=False, index=False, quoting=csv.QUOTE_NONNUMERIC,
-                     encoding='utf-8')
+                     encoding='utf-8', escapechar='\\')
 
 
 def partition(df, chunksize=1000):
@@ -69,16 +69,22 @@ def parse(lines, **kwargs):
     names = lines.readline().decode('utf-8').strip().split('\t')
     types = lines.readline().decode('utf-8').strip().split('\t')
     dtypes, dtimes = {}, []
+    string_columns = []
     for name, chtype in zip(names, types):
         dtype = CH2PD[chtype]
         if dtype.startswith('datetime'):
             dtimes.append(name)
         else:
             dtypes[name] = dtype
+        if chtype == 'String':
+            string_columns.append(name)
 
-    return pd.read_table(lines, header=None, names=names,
-                         dtype=dtypes, parse_dates=dtimes,
-                         **kwargs)
+    df = pd.read_table(lines, header=None, names=names,
+                       dtype=dtypes, parse_dates=dtimes,
+                       na_values=set(), keep_default_na=False,
+                       **kwargs)
+    df[string_columns] = df[string_columns].applymap(decode_escape_sequences)
+    return df
 
 
 def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):

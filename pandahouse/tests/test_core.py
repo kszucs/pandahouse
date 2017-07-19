@@ -1,5 +1,6 @@
 import pytest
 
+import codecs
 import random
 import datetime
 import numpy as np
@@ -61,27 +62,32 @@ def test_query(df, connection):
                           connection=connection)
     assert df_.shape == (100, 1)
 
-@pytest.mark.skip
-def test_read_empty_string():
-    ''' TODO(Rara): Failing. Fix coming soon.
+
+def test_read_special_values(connection):
+    ''' Tests empty string values, and String values with special UTF-8 chars.
     '''
     random_id1, random_id2 = sorted(random.getrandbits(128) for _ in range(2))
-    config = {'host': 'http://localhost:8123', 'database': 'test'}
     date = datetime.date(2017, 1, 1)
-    create_table = '''CREATE TABLE IF NOT EXISTS test.testxyz (
+    create_table = '''CREATE TABLE IF NOT EXISTS {db}.testxyz (
         id String,
         sss String,
         date Date
     ) ENGINE = MergeTree(date, (id), 8192);
-    '''
-    execute(create_table, connection=config)
-    df = pd.DataFrame([[str(random_id1), 'joe', pd.to_datetime(date)],
-                       [str(random_id2), 's', pd.to_datetime(date)]],
+    '''.format(db=connection['database'])
+    execute(create_table, connection=connection)
+    df = pd.DataFrame([[str(random_id1), 'joe\\\t\\t\t\u00A0jane\njack',
+                        pd.to_datetime(date)],
+                       [str(random_id1), 'james\u2620johnny',
+                        pd.to_datetime(date)],
+                       [str(random_id2), '', pd.to_datetime(date)]],
                       columns=['id', 'sss', 'date'])
-    to_clickhouse(df, 'testxyz', index=False, connection=config)
-    read_query = f'''
-        SELECT * FROM test.testxyz
-            WHERE id='{random_id1}' OR id='{random_id2}';
-    '''
-    read_df = read_clickhouse(read_query, connection=config)
-    assert_frame_equal(df, read_df)
+    to_clickhouse(df, 'testxyz', index=False, connection=connection)
+    read_query = '''
+        SELECT * FROM {{db}}.testxyz
+            WHERE id='{}' OR id='{}';
+    '''.format(random_id1, random_id2)
+    read_df = read_clickhouse(read_query, connection=connection)
+
+    print(read_query)
+    assert_frame_equal(df.sort_values('id').set_index('id'),
+                       read_df.sort_values('id').set_index('id'))

@@ -47,7 +47,6 @@ def selection(query, tables=None, index=True):
     tables = tables or {}
     for name, df in tables.items():
         dtypes, df = normalize(df, index=index)
-        # dtypes = keymap(escape, dtypes)
         data = to_csv(df)
         structure = ', '.join(map(' '.join, dtypes.items()))
         external[name] = (structure, data)
@@ -57,9 +56,9 @@ def selection(query, tables=None, index=True):
 
 def insertion(df, table, index=True):
     insert = 'INSERT INTO {db}.{table} ({columns}) FORMAT CSV'
-    dtypes, df = normalize(df, index=index)
+    _, df = normalize(df, index=index)
 
-    columns = ', '.join(map(escape, dtypes.keys()))
+    columns = ', '.join(map(escape, df.columns))
     query = insert.format(db='{db}', columns=columns, table=escape(table))
 
     return query, df

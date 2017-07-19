@@ -117,5 +117,7 @@ def test_write_read_column_order(connection):
         random_id)
     read_df = read_clickhouse(read_query, connection=connection)
 
-    assert_frame_equal(df.reindex_axis(sorted(df.columns), axis=1).sort_values('id').set_index('id'),
-                       read_df.reindex_axis(sorted(df.columns), axis=1).sort_values('id').set_index('id'))
+    assert_frame_equal(df.reindex_axis(sorted(df.columns), axis=1)
+                       .sort_values('id') .set_index('id'),
+                       read_df.reindex_axis(sorted(df.columns), axis=1)
+                       .sort_values('id') .set_index('id'))

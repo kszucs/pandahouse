@@ -1,42 +1,6 @@
-import csv
-
-import pandas as pd
-from toolz import valmap
-
 from .http import execute
-from .utils import PD2CH, CH2PD, escape, decode_escape_sequences
-
-
-def normalize(df, index=True):
-    if index:
-        df = df.reset_index()
-
-    for col in df.select_dtypes([bool]):
-        df[col] = df[col].astype('uint8')
-
-    dtypes = valmap(PD2CH.get, dict(df.dtypes))
-    if None in dtypes.values():
-        raise ValueError('Unknown type mapping in dtypes: {}'.format(dtypes))
-
-    return dtypes, df
-
-
-def to_csv(df):
-    return df.to_csv(header=False, index=False, quoting=csv.QUOTE_NONNUMERIC,
-                     encoding='utf-8', escapechar='\\')
-
-
-def partition(df, chunksize=1000):
-    nrows = df.shape[0]
-    nchunks = int(nrows / chunksize) + 1
-    for i in range(nchunks):
-        start_i = i * chunksize
-        end_i = min((i + 1) * chunksize, nrows)
-        if start_i >= end_i:
-            break
-
-        chunk = df.iloc[start_i:end_i]
-        yield chunk
+from .utils import escape
+from .convert import normalize, partition, to_dataframe, to_csv
 
 
 def selection(query, tables=None, index=True):
@@ -62,28 +26,6 @@ def insertion(df, table, index=True):
     query = insert.format(db='{db}', columns=columns, table=escape(table))
 
     return query, df
-
-
-def parse(lines, **kwargs):
-    names = lines.readline().decode('utf-8').strip().split('\t')
-    types = lines.readline().decode('utf-8').strip().split('\t')
-    dtypes, dtimes = {}, []
-    string_columns = []
-    for name, chtype in zip(names, types):
-        dtype = CH2PD[chtype]
-        if dtype.startswith('datetime'):
-            dtimes.append(name)
-        else:
-            dtypes[name] = dtype
-        if chtype == 'String':
-            string_columns.append(name)
-
-    df = pd.read_table(lines, header=None, names=names,
-                       dtype=dtypes, parse_dates=dtimes,
-                       na_values=set(), keep_default_na=False,
-                       **kwargs)
-    df[string_columns] = df[string_columns].applymap(decode_escape_sequences)
-    return df
 
 
 def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):
@@ -113,7 +55,7 @@ def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):
     query, external = selection(query, tables=tables, index=index)
     lines = execute(query, external=external, stream=True,
                     connection=connection)
-    return parse(lines, **kwargs)
+    return to_dataframe(lines, **kwargs)
 
 
 def to_clickhouse(df, table, index=True, chunksize=1000, connection=None):

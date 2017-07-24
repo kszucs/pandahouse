@@ -1,7 +1,10 @@
 import pytest
 
+import random
+import datetime
 import numpy as np
 import pandas as pd
+
 
 from pandas.util.testing import assert_frame_equal
 
@@ -58,3 +61,63 @@ def test_query(df, connection):
                           connection=connection)
     assert df_.shape == (100, 1)
 
+
+def test_read_special_values(connection):
+    ''' Tests empty string values, and String values with special UTF-8 chars.
+    '''
+    random_id = random.getrandbits(128)
+    date = datetime.date(2017, 1, 1)
+    create_table = '''CREATE TABLE IF NOT EXISTS {db}.testxyz (
+        id String,
+        sss String,
+        date Date
+    ) ENGINE = MergeTree(date, (id), 8192);
+    '''.format(db=connection['database'])
+    execute(create_table, connection=connection)
+    df = pd.DataFrame([[str(random_id), 'joe\\\t\\t\t\u00A0jane\njack',
+                        pd.to_datetime(date)],
+                       [str(random_id + 1), 'james\u2620johnny',
+                        pd.to_datetime(date)],
+                       [str(random_id + 2), '', pd.to_datetime(date)]],
+                      columns=['id', 'sss', 'date'])
+    to_clickhouse(df, 'testxyz', index=False, connection=connection)
+    read_query = '''
+        SELECT * FROM {{db}}.testxyz
+            WHERE id='{}' OR id='{}' OR id='{}';
+    '''.format(*list(range(random_id, random_id + 3)))
+    read_df = read_clickhouse(read_query, connection=connection)
+
+    assert_frame_equal(df.sort_values('id').set_index('id'),
+                       read_df.sort_values('id').set_index('id'))
+
+
+def test_write_read_column_order(connection):
+    random_id = random.getrandbits(128)
+    date = datetime.date(2017, 1, 1)
+    create_table = '''CREATE TABLE IF NOT EXISTS {db}.testxyz2 (
+        id String,
+        joe UInt64,
+        sss String,
+        date Date,
+        jessy Int32
+    ) ENGINE = MergeTree(date, (id), 8192);
+    '''.format(db=connection['database'])
+    execute(create_table, connection=connection)
+    df = pd.DataFrame([[str(random_id),
+                        'joe\\\t\\t\t\u00A0jane\njack',
+                        15,
+                        pd.to_datetime(date),
+                        125]],
+                      columns=['id', 'sss', 'joe', 'date', 'jessy']
+                      )
+    df['joe'] = df['joe'].astype(np.uint64)
+    df['jessy'] = df['jessy'].astype(np.int32)
+    to_clickhouse(df, 'testxyz2', index=False, connection=connection)
+    read_query = "SELECT * FROM {{db}}.testxyz2 WHERE id='{}';".format(
+        random_id)
+    read_df = read_clickhouse(read_query, connection=connection)
+
+    assert_frame_equal(df.reindex_axis(sorted(df.columns), axis=1)
+                       .sort_values('id') .set_index('id'),
+                       read_df.reindex_axis(sorted(df.columns), axis=1)
+                       .sort_values('id') .set_index('id'))

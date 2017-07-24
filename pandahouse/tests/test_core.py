@@ -100,8 +100,8 @@ def test_read_special_strings(connection, xyz):
     """Tests empty and special UTF-8 string values"""
 
     date = pd.to_datetime(datetime.date(2017, 1, 1))
-    data = [[1, decode_escapes('joe\\\t\\t\t\u00A0jane\njack'), date],
-            [2, decode_escapes('james\u2620johnny'), date],
+    data = [[1, 'joe\\\t\\t\t\u00A0jane\njack', date],
+            [2, 'james\u2620johnny', date],
             [3, '', date]]
     expected = pd.DataFrame(data, columns=['id', 'sss', 'date'])
     to_clickhouse(expected, 'xyz', index=False, connection=connection)
@@ -114,7 +114,7 @@ def test_read_special_strings(connection, xyz):
 
 def test_write_read_column_order(connection, xyz2):
     date = pd.to_datetime(datetime.date(2017, 1, 1))
-    data = [[1, decode_escapes('joe\\\t\\t\t\u00A0jane\njack'), 15, date, 125]]
+    data = [[1, 'joe\\\t\\t\t\u00A0jane\njack', 15, date, 125]]
     columns = ['id', 'sss', 'joe', 'date', 'jessy']
 
     expected = pd.DataFrame(data, columns=columns)

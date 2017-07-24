@@ -1,4 +1,5 @@
 import csv
+import sys
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -26,6 +27,9 @@ CH2PD = itemmap(reversed, MAPPING)
 CH2PD['Null'] = 'object'
 
 
+PY3 = sys.version_info[0] == 3
+
+
 def normalize(df, index=True):
     if index:
         df = df.reset_index()
@@ -41,8 +45,12 @@ def normalize(df, index=True):
 
 
 def to_csv(df):
-    return df.to_csv(header=False, index=False, encoding='utf-8',
+    data = df.to_csv(header=False, index=False, encoding='utf-8',
                      quoting=csv.QUOTE_NONNUMERIC, escapechar='\\')
+    if PY3:
+        return data.encode('utf-8')
+    else:
+        return data
 
 
 def to_dataframe(lines, **kwargs):

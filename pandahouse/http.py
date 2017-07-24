@@ -37,8 +37,6 @@ def prepare(query, connection=None, external=None):
 
 def execute(query, connection=None, data=None, external=None, stream=False):
     host, params, files = prepare(query, connection, external=external)
-    if data is not None:
-        data = data.encode('utf-8')
 
     response = requests.post(host, params=params, data=data,
                              stream=stream, files=files)

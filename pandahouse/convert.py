@@ -12,9 +12,9 @@ MAPPING = {'object': 'String',
            'uint64': 'UInt64',
            'uint32': 'UInt32',
            'uint16': 'UInt16',
+           'uint8': 'UInt8',
            'float64': 'Float64',
            'float32': 'Float32',
-           'uint8': 'UInt8',
            'int64': 'Int64',
            'int32': 'Int32',
            'int16': 'Int16',
@@ -26,7 +26,11 @@ PD2CH = keymap(np.dtype, MAPPING)
 CH2PD = itemmap(reversed, MAPPING)
 CH2PD['Null'] = 'object'
 
+NULLABLE_COLS = ['UInt64', 'UInt32', 'UInt16', 'UInt8', 'Float64', 'Float32',
+                 'Int64', 'Int32', 'Int16', 'Int8']
 
+for col in NULLABLE_COLS:
+    CH2PD['Nullable({})'.format(col)] = CH2PD[col]
 PY3 = sys.version_info[0] == 3
 
 

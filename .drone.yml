@@ -1,7 +1,7 @@
 matrix:
   PYTHON_IMAGE:
-    - kszucs/miniconda2
-    - kszucs/miniconda3
+    - continuumio/miniconda
+    - continuumio/miniconda3
 
 services:
   clickhouse:

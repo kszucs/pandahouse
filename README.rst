@@ -1,4 +1,16 @@
-|Build Status|
+|Build Status| |Gitential Active Contributors| |Gitential Coding Hours| |Gitential Efficiency|
+
+.. |Gitential Active Contributors| image:: https://api.gitential.com/accounts/6/projects/121/badges/active-contributors.svg
+   :alt: Gitential Efficiency
+   :target: https://gitential.com/accounts/6/projects/121/share?uuid=4fc48389-c5e6-48c5-91d8-d11adcdd9405&utm_source=shield&utm_medium=shield&utm_campaign=121
+
+.. |Gitential Coding Hours| image:: https://api.gitential.com/accounts/6/projects/121/badges/coding-hours.svg
+   :alt: Gitential Efficiency
+   :target: https://gitential.com/accounts/6/projects/121/share?uuid=4fc48389-c5e6-48c5-91d8-d11adcdd9405&utm_source=shield&utm_medium=shield&utm_campaign=121
+
+.. |Gitential Efficiency| image:: https://api.gitential.com/accounts/6/projects/121/badges/efficiency.svg
+   :alt: Gitential Efficiency
+   :target: https://gitential.com/accounts/6/projects/121/share?uuid=4fc48389-c5e6-48c5-91d8-d11adcdd9405&utm_source=shield&utm_medium=shield&utm_campaign=121
 
 Pandahouse
 ==========

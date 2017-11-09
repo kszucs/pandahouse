@@ -19,6 +19,26 @@ def df():
     return df.set_index('A')
 
 
+@pytest.fixture(scope='module')
+def catdf():
+    ids = np.random.randint(0, 100, size=(20,))
+    size = np.random.randint(0, 2, size=(20,))
+    color = np.random.randint(0, 3, size=(20,))
+    date = pd.to_datetime(datetime.date(2017, 1, 1))
+
+    df = pd.DataFrame({'date': date,
+                       'id': ids,
+                       'size': size,
+                       'color': color})
+
+    df['size'] = pd.Categorical.from_codes(
+        df['size'], categories=['small', 'medium', 'big'])
+    df['color'] = pd.Categorical.from_codes(
+        df['color'], categories=['green', 'blue', 'yellow', 'red'])
+
+    return df.set_index('id')
+
+
 @pytest.yield_fixture(scope='module')
 def database(connection):
     create = 'CREATE DATABASE IF NOT EXISTS {db}'
@@ -77,6 +97,23 @@ def xyz2(connection, database):
         execute(drop, connection=connection)
 
 
+@pytest.yield_fixture
+def xyz3(connection, database):
+    create = '''
+        CREATE TABLE IF NOT EXISTS {db}.xyz3 (
+            id Int64,
+            date Date,
+            size Enum8('small' = 0, 'medium' = 1, 'big' = 2),
+            color Enum16('green' = 0, 'blue' = 1, 'yellow' = 2, 'red' = 3)
+        ) ENGINE = MergeTree(date, (id), 8192);
+    '''
+    drop = 'DROP TABLE IF EXISTS {db}.xyz3'
+    try:
+        yield execute(create, connection=connection)
+    finally:
+        execute(drop, connection=connection)
+
+
 def test_insert(df, decimals, connection):
     affected_rows = to_clickhouse(df, table='decimals', connection=connection)
     assert affected_rows == 100
@@ -127,3 +164,14 @@ def test_write_read_column_order(connection, xyz2):
 
     assert_frame_equal(df.reindex_axis(sorted(df.columns), axis=1),
                        expected.reindex_axis(sorted(df.columns), axis=1))
+
+
+def test_categoricals_to_enum(connection, xyz3, catdf):
+    affected_rows = to_clickhouse(catdf, table='xyz3', index=True,
+                                  connection=connection)
+    query = 'SELECT id, color, date, size FROM {db}.xyz3;'
+    df = read_clickhouse(query, connection=connection)
+    df = df.set_index('id')
+
+    assert_frame_equal(df.sort_index(), catdf.sort_index())
+

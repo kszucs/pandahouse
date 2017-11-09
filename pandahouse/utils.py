@@ -42,3 +42,17 @@ def _decode_match(match):
 
 def decode_escapes(s):
     return ESCAPE_SEQUENCE_RE.sub(_decode_match, s)
+
+
+def encode_enum(dtype):
+    values = ['{} = {}'.format(escape(val, quote="'"), i)
+              for i, val in enumerate(dtype.categories)]
+    return 'Enum16({})'.format(', '.join(values))
+
+
+def decode_enum(chtype):
+    chtype = decode_escapes(chtype)
+    values = re.match('Enum(8|16)\((.*)\)', chtype).group(2)
+    values = [re.match('\'(.*)\'\s+=\s+(\d+)', v) 
+              for v in re.split(',\s*', values)]
+    return {m.group(1): int(m.group(2)) for m in values}

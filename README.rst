@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkszucs%2Fpandahouse.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkszucs%2Fpandahouse?ref=badge_shield)
+
 |Build Status| |Gitential Active Contributors| |Gitential Coding Hours| |Gitential Efficiency|
 
 .. |Gitential Active Contributors| image:: https://api.gitential.com/accounts/6/projects/121/badges/active-contributors.svg
@@ -48,3 +50,7 @@ Reading arbitrary clickhouse query to pandas
 
 .. |Build Status| image:: http://drone.lensa.com:8000/api/badges/kszucs/pandahouse/status.svg
    :target: http://drone.lensa.com:8000/kszucs/pandahouse
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkszucs%2Fpandahouse.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkszucs%2Fpandahouse?ref=badge_large)

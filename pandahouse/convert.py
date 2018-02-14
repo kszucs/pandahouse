@@ -25,6 +25,7 @@ MAPPING = {'object': 'String',
 PD2CH = keymap(np.dtype, MAPPING)
 CH2PD = itemmap(reversed, MAPPING)
 CH2PD['Null'] = 'object'
+CH2PD['Nothing'] = 'object'
 
 NULLABLE_COLS = ['UInt64', 'UInt32', 'UInt16', 'UInt8', 'Float64', 'Float32',
                  'Int64', 'Int32', 'Int16', 'Int8']

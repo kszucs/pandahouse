@@ -29,9 +29,10 @@ MAPPING = {'object': 'String',
 PD2CH = keymap(np.dtype, MAPPING)
 CH2PD = itemmap(reversed, MAPPING)
 CH2PD['Null'] = 'object'
+CH2PD['Nothing'] = 'object'
 
 NULLABLE_COLS = ['UInt64', 'UInt32', 'UInt16', 'UInt8', 'Float64', 'Float32',
-                 'Int64', 'Int32', 'Int16', 'Int8']
+                 'Int64', 'Int32', 'Int16', 'Int8', 'Nothing']
 
 #for col in NULLABLE_COLS:
 #    CH2PD['Nullable({})'.format(col)] = CH2PD[col]
@@ -93,7 +94,7 @@ def to_dataframe(lines, **kwargs):
     df = pd.read_table(lines, header=None, names=names, dtype=dtypes,
                        parse_dates=parse_dates, converters=converters,
                        na_values=set(), keep_default_na=False, **kwargs)
-    
+
     for name, values in categoricals.items():
         df[name] = pd.Categorical(df[name], categories=values)
 

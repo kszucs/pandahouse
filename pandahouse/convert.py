@@ -2,11 +2,15 @@ import csv
 import sys
 import numpy as np
 import pandas as pd
+from functools import partial
 from collections import OrderedDict
 from toolz import itemmap, keymap, valmap
 
-from .utils import decode_escapes
+from .utils import escape, decode_escapes
+from .utils import encode_enum, decode_enum
 
+
+PY3 = sys.version_info[0] == 3
 
 MAPPING = {'object': 'String',
            'uint64': 'UInt64',
@@ -28,11 +32,11 @@ CH2PD['Null'] = 'object'
 CH2PD['Nothing'] = 'object'
 
 NULLABLE_COLS = ['UInt64', 'UInt32', 'UInt16', 'UInt8', 'Float64', 'Float32',
-                 'Int64', 'Int32', 'Int16', 'Int8']
+                 'Int64', 'Int32', 'Int16', 'Int8', 'Nothing']
 
-for col in NULLABLE_COLS:
-    CH2PD['Nullable({})'.format(col)] = CH2PD[col]
-PY3 = sys.version_info[0] == 3
+#for col in NULLABLE_COLS:
+#    CH2PD['Nullable({})'.format(col)] = CH2PD[col]
+
 
 
 def normalize(df, index=True):
@@ -42,11 +46,21 @@ def normalize(df, index=True):
     for col in df.select_dtypes([bool]):
         df[col] = df[col].astype('uint8')
 
-    dtypes = valmap(PD2CH.get, OrderedDict(df.dtypes))
-    if None in dtypes.values():
-        raise ValueError('Unknown type mapping in dtypes: {}'.format(dtypes))
+    # for col in df.select_dtypes(['category']):
+    #     df[col] = df[col].astype(object)
 
-    return dtypes, df
+    types = OrderedDict()
+    for name, dtype in df.dtypes.items():
+        if dtype.name == 'category':
+            types[name] = encode_enum(dtype)
+        else:
+            try:
+                types[name] = PD2CH[dtype]
+            except KeyError:
+                msg = 'Unknown type mapping for dtype: `{}`'
+                raise ValueError(msg.format(dtype))
+
+    return types, df
 
 
 def to_csv(df):
@@ -62,9 +76,14 @@ def to_dataframe(lines, **kwargs):
     names = lines.readline().decode('utf-8').strip().split('\t')
     types = lines.readline().decode('utf-8').strip().split('\t')
 
-    dtypes, parse_dates, converters = {}, [], {}
+    dtypes, parse_dates, converters, categoricals = {}, [], {}, {}
     for name, chtype in zip(names, types):
-        dtype = CH2PD[chtype]
+        if chtype.startswith('Enum'):
+            dtype = 'object'
+            categoricals[name] = decode_enum(chtype)
+        else:
+            dtype = CH2PD[chtype]
+
         if dtype == 'object':
             converters[name] = decode_escapes
         elif dtype.startswith('datetime'):
@@ -72,9 +91,14 @@ def to_dataframe(lines, **kwargs):
         else:
             dtypes[name] = dtype
 
-    return pd.read_table(lines, header=None, names=names, dtype=dtypes,
-                         parse_dates=parse_dates, converters=converters,
-                         na_values=set(), keep_default_na=False, **kwargs)
+    df = pd.read_table(lines, header=None, names=names, dtype=dtypes,
+                       parse_dates=parse_dates, converters=converters,
+                       na_values=set(), keep_default_na=False, **kwargs)
+
+    for name, values in categoricals.items():
+        df[name] = pd.Categorical(df[name], categories=values)
+
+    return df
 
 
 def partition(df, chunksize=1000):
@@ -88,3 +112,4 @@ def partition(df, chunksize=1000):
 
         chunk = df.iloc[start_i:end_i]
         yield chunk
+

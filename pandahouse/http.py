@@ -18,7 +18,8 @@ def prepare(query, connection=None, external=None):
     connection = merge(_default, connection or {})
     database = escape(connection['database'])
     query = query.format(db=database)
-    params = {'query': query,
+    params = {'database': connection['database'],
+              'query': query,
               'user': connection['user'],
               'password': connection['password']}
     params = valfilter(lambda x: x, params)

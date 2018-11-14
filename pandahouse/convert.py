@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from toolz import itemmap, keymap, valmap
+
 from .utils import decode_escapes, decode_array
 
 

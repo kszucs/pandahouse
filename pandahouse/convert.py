@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from toolz import itemmap, keymap, valmap
-
-from .utils import decode_escapes
+from .utils import decode_escapes, decode_array
 
 
 MAPPING = {'object': 'String',
@@ -64,8 +63,11 @@ def to_dataframe(lines, **kwargs):
 
     dtypes, parse_dates, converters = {}, [], {}
     for name, chtype in zip(names, types):
-        dtype = CH2PD[chtype]
-        if dtype == 'object':
+        dtype = CH2PD.get(chtype, 'object')
+
+        if chtype.startswith("Array("):
+            converters[name] = decode_array
+        elif dtype == 'object':
             converters[name] = decode_escapes
         elif dtype.startswith('datetime'):
             parse_dates.append(name)

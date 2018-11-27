@@ -1,5 +1,6 @@
 import pytest
 
+import toolz
 import datetime
 import numpy as np
 import pandas as pd
@@ -19,18 +20,20 @@ def df():
 
 
 @pytest.fixture(scope='module')
-def connection(host):
-    return {'host': host, 'database': 'test'}
+def connection(connection):
+    return toolz.merge(connection, {'database': 'test'})
 
 
 @pytest.yield_fixture(scope='module')
-def database(host):
+def database(connection):
+    # drop database key, because it's not existing yet
+    connection = dict(host=connection['host'])
     create = 'CREATE DATABASE IF NOT EXISTS test'
     drop = 'DROP DATABASE IF EXISTS test'
     try:
-        yield execute(create, connection=dict(host=host))
+        yield execute(create, connection=connection)
     finally:
-        execute(drop, connection=dict(host=host))
+        execute(drop, connection=connection)
 
 
 @pytest.yield_fixture

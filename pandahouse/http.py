@@ -38,8 +38,14 @@ def prepare(query, connection=None, external=None):
 def execute(query, connection=None, data=None, external=None, stream=False):
     host, params, files = prepare(query, connection, external=external)
 
-    response = requests.post(host, params=params, data=data,
-                             stream=stream, files=files)
+    kwargs = dict(params=params, data=data, stream=stream, files=files)
+
+    if "user" in params and "password" in params:
+        kwargs["auth"] = (params["user"], params["password"])
+        del params["user"]
+        del params["password"]
+
+    response = requests.post(host, **kwargs)
 
     try:
         response.raise_for_status()

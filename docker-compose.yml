@@ -13,7 +13,8 @@ services:
     links:
       - clickhouse:clickhouse
     environment:
-      - CLICKHOUSE=http://clickhouse:8123
+      - CLICKHOUSE_HOST=http://clickhouse:8123
+      - CLICKHOUSE_DATABASE=default
     build:
       context: .
       args:

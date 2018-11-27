@@ -1,12 +1,12 @@
 import pytest
 
+import toolz
 import datetime
 import numpy as np
 import pandas as pd
 
 from pandahouse.http import execute
 from pandahouse.core import to_clickhouse, read_clickhouse
-from pandahouse.utils import decode_escapes
 
 from pandas.util.testing import assert_frame_equal
 
@@ -19,10 +19,17 @@ def df():
     return df.set_index('A')
 
 
+@pytest.fixture(scope='module')
+def connection(connection):
+    return toolz.merge(connection, {'database': 'test'})
+
+
 @pytest.yield_fixture(scope='module')
 def database(connection):
-    create = 'CREATE DATABASE IF NOT EXISTS {db}'
-    drop = 'DROP DATABASE IF EXISTS {db}'
+    # drop database key, because it's not existing yet
+    connection = dict(host=connection['host'])
+    create = 'CREATE DATABASE IF NOT EXISTS test'
+    drop = 'DROP DATABASE IF EXISTS test'
     try:
         yield execute(create, connection=connection)
     finally:

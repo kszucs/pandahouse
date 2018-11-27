@@ -17,12 +17,6 @@ def test_execute_stream(connection):
     assert result
 
 
-def test_execute_long_query(connection):
-    where_clause = " where A in {0}".format(tuple(range(1, 4000)))
-    query = "SELECT count(*) FROM {db}.decimals " + where_clause
-    execute(query=query, connection=connection, stream=True)
-
-
 def test_wrong_host():
     query = 'DESC system.parts FORMAT CSV;'
     with pytest.raises(ConnectionError):

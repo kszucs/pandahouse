@@ -1,6 +1,6 @@
 import re
-import codecs
 import json
+import codecs
 
 
 SPECIAL_CHARS = {

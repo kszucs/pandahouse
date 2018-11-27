@@ -3,7 +3,6 @@ import pytest
 from requests.exceptions import RequestException, ConnectionError
 from pandahouse.http import execute, ClickhouseException
 
-from pandahouse.tests.test_core import decimals,database
 
 def test_execute(connection):
     query = 'DESC system.parts FORMAT CSV;'
@@ -17,10 +16,12 @@ def test_execute_stream(connection):
     result = response.read()
     assert result
 
+
 def test_execute_long_query(decimals, connection):
     where_clause = " where A in {0}".format(tuple(range(1,4000)))
-    query = "SELECT count(*) FROM {db}.decimals "+where_clause
+    query = "SELECT count(*) FROM {db}.decimals " + where_clause
     execute(query=query, connection=connection, stream=True)
+
 
 def test_wrong_host():
     query = 'DESC system.parts FORMAT CSV;'
@@ -32,4 +33,3 @@ def test_wrong_query(connection):
     query = 'SELECT * FROM default.nonexisting'
     with pytest.raises((ClickhouseException, RequestException)):
         execute(query, connection=connection)
-

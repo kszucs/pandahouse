@@ -1,12 +1,9 @@
 version: 2
 
-base: &base
+test: &test
   machine:
     image: circleci/classic:latest
-    docker_layer_caching: false
-
-test: &test
-  <<: *base
+    # docker_layer_caching: false
   steps:
     - checkout:
         path: ~/pandahouse

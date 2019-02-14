@@ -34,7 +34,7 @@ Writing dataframe to clickhouse
 .. code:: python
 
     connection = {'host': 'http://clickhouse-host:8123',
-                  'database': 'test'
+                  'database': 'test'}
     affected_rows = to_clickhouse(df, table='name', connection=connection)
 
 

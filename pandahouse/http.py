@@ -18,7 +18,8 @@ def prepare(query, connection=None, external=None):
     connection = merge(_default, connection or {})
     database = escape(connection['database'])
     query = query.format(db=database)
-    params = {'query': query,
+    params = {'database': connection['database'],
+              'query': query,
               'user': connection['user'],
               'password': connection['password']}
     params = valfilter(lambda x: x, params)
@@ -38,8 +39,19 @@ def prepare(query, connection=None, external=None):
 def execute(query, connection=None, data=None, external=None, stream=False):
     host, params, files = prepare(query, connection, external=external)
 
-    response = requests.post(host, params=params, data=data,
-                             stream=stream, files=files)
+    # default limits of HTTP url length, for details see:
+    # https://clickhouse.yandex/docs/en/single/index.html#http-interface
+    if len(params['query']) >= 15000 and data is None:
+        data = params.pop('query', None)
+
+    # basic auth
+    kwargs = dict(params=params, data=data, stream=stream, files=files)
+    if 'user' in params and 'password' in params:
+        kwargs['auth'] = (params['user'], params['password'])
+        del params['user']
+        del params['password']
+
+    response = requests.post(host, **kwargs)
 
     try:
         response.raise_for_status()

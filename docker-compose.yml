@@ -1,0 +1,20 @@
+version: '3.2'
+
+services:
+
+  clickhouse:
+    image: yandex/clickhouse-server
+    ports:
+      - 8123:8123
+      - 9000:9000
+
+  pandahouse:
+    image: pandahouse:${PYTHON_VERSION:-3.6}
+    links:
+      - clickhouse:clickhouse
+    environment:
+      - CLICKHOUSE_HOST=http://clickhouse:8123
+    build:
+      context: .
+      args:
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.6}

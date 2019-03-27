@@ -7,7 +7,7 @@ from .utils import escape
 
 
 _default = dict(host='http://localhost:8123', database='default',
-                user=None, password=None)
+                user=None, password=None, verify_tls=True)
 
 
 class ClickhouseException(Exception):
@@ -33,11 +33,11 @@ def prepare(query, connection=None, external=None):
 
     host = connection['host']
 
-    return host, params, files
+    return host, params, files, connection['verify_tls']
 
 
 def execute(query, connection=None, data=None, external=None, stream=False):
-    host, params, files = prepare(query, connection, external=external)
+    host, params, files, verify_tls = prepare(query, connection, external=external)
 
     # default limits of HTTP url length, for details see:
     # https://clickhouse.yandex/docs/en/single/index.html#http-interface
@@ -51,7 +51,7 @@ def execute(query, connection=None, data=None, external=None, stream=False):
         del params['user']
         del params['password']
 
-    response = requests.post(host, **kwargs)
+    response = requests.post(host, verify=verify_tls, **kwargs)
 
     try:
         response.raise_for_status()

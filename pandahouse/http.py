@@ -36,7 +36,7 @@ def prepare(query, connection=None, external=None):
     return host, params, files
 
 
-def execute(query, connection=None, data=None, external=None, stream=False, verify=False):
+def execute(query, connection=None, data=None, external=None, stream=False, verify=True):
     host, params, files = prepare(query, connection, external=external)
 
     # default limits of HTTP url length, for details see:

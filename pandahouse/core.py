@@ -28,7 +28,7 @@ def insertion(df, table, index=True):
     return query, df
 
 
-def read_clickhouse(query, tables=None, index=True, connection=None, verify=False,  **kwargs):
+def read_clickhouse(query, tables=None, index=True, connection=None, verify=True,  **kwargs):
     """Reads clickhouse query to pandas dataframe
 
     Parameters
@@ -49,7 +49,7 @@ def read_clickhouse(query, tables=None, index=True, connection=None, verify=Fals
         clickhouse password
     index: bool, default True
         whether to serialize `tables` with index or not
-    verify: bool, default False
+    verify: bool, default True
         SSL Cert Verification
 
     Additional keyword arguments passed to `pandas.read_table`

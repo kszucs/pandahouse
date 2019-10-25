@@ -1,10 +1,11 @@
 import requests
+import ssl
 
+from requests.adapters import HTTPAdapter, DEFAULT_POOLSIZE, DEFAULT_POOLSIZE, DEFAULT_RETRIES, DEFAULT_POOLBLOCK
 from requests.exceptions import RequestException
 from toolz import valfilter, merge
 
 from .utils import escape
-
 
 _default = dict(host='http://localhost:8123', database='default',
                 user=None, password=None)
@@ -14,12 +15,28 @@ class ClickhouseException(Exception):
     pass
 
 
+class SSLAdapter(HTTPAdapter):
+    def __init__(self, cert_file,
+                 pool_connections=DEFAULT_POOLSIZE,
+                 pool_maxsize=DEFAULT_POOLSIZE,
+                 max_retries=DEFAULT_RETRIES,
+                 pool_block=DEFAULT_POOLBLOCK):
+        self.cert_file = cert_file
+        super(SSLAdapter, self).__init__(pool_connections, pool_maxsize, max_retries, pool_block)
+
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ctx.protocol = "SSL"
+        ctx.load_verify_locations(self.cert_file)
+        kwargs['ssl_context'] = ctx
+        return super(SSLAdapter, self).init_poolmanager(*args, **kwargs)
+
+
 def prepare(query, connection=None, external=None):
     connection = merge(_default, connection or {})
     database = escape(connection['database'])
     query = query.format(db=database)
-    params = {'database': connection['database'],
-              'query': query,
+    params = {'query': query,
               'user': connection['user'],
               'password': connection['password']}
     params = valfilter(lambda x: x, params)
@@ -36,22 +53,20 @@ def prepare(query, connection=None, external=None):
     return host, params, files
 
 
-def execute(query, connection=None, data=None, external=None, stream=False):
+def execute(query, connection=None, data=None, external=None, stream=False, cert_file=None):
     host, params, files = prepare(query, connection, external=external)
 
-    # default limits of HTTP url length, for details see:
-    # https://clickhouse.yandex/docs/en/single/index.html#http-interface
-    if len(params['query']) >= 15000 and data is None:
-        data = params.pop('query', None)
+    # for insecure ssl without certificate.pem file
+    if cert_file == None:
+        response = requests.post(host, params=params, verify=False, data=data,
+                                 stream=stream, files=files)
 
-    # basic auth
-    kwargs = dict(params=params, data=data, stream=stream, files=files)
-    if 'user' in params and 'password' in params:
-        kwargs['auth'] = (params['user'], params['password'])
-        del params['user']
-        del params['password']
+    # for secure ssl with certificate.pem file
+    else:
+        session = requests.Session()
+        session.mount(host, SSLAdapter(cert_file))
 
-    response = requests.post(host, **kwargs)
+        response = session.post(host, params=params, data=data, stream=stream, files=files)
 
     try:
         response.raise_for_status()

@@ -5,7 +5,7 @@ import pandas as pd
 from collections import OrderedDict
 from toolz import itemmap, keymap, valmap
 
-from .utils import decode_escapes, decode_array
+from .utils import decode_escapes
 
 
 MAPPING = {'object': 'String',
@@ -28,7 +28,7 @@ CH2PD['Null'] = 'object'
 CH2PD['Nothing'] = 'object'
 
 NULLABLE_COLS = ['UInt64', 'UInt32', 'UInt16', 'UInt8', 'Float64', 'Float32',
-                 'Int64', 'Int32', 'Int16', 'Int8', 'String']
+                 'Int64', 'Int32', 'Int16', 'Int8']
 
 for col in NULLABLE_COLS:
     CH2PD['Nullable({})'.format(col)] = CH2PD[col]
@@ -64,11 +64,8 @@ def to_dataframe(lines, **kwargs):
 
     dtypes, parse_dates, converters = {}, [], {}
     for name, chtype in zip(names, types):
-        dtype = CH2PD.get(chtype, 'object')
-
-        if chtype.startswith("Array("):
-            converters[name] = decode_array
-        elif dtype == 'object':
+        dtype = CH2PD[chtype]
+        if dtype == 'object':
             converters[name] = decode_escapes
         elif dtype.startswith('datetime'):
             parse_dates.append(name)

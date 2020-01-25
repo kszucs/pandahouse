@@ -50,7 +50,7 @@ def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):
     index: bool, default True
         whether to serialize `tables` with index or not
 
-    Additional keyword arguments passed to `pandas.read_table`
+    Additional keyword arguments passed to `pandas.read_csv`
     """
     query, external = selection(query, tables=tables, index=index)
     lines = execute(query, external=external, stream=True,

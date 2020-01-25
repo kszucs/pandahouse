@@ -36,7 +36,7 @@ def prepare(query, connection=None, external=None):
     return host, params, files
 
 
-def execute(query, connection=None, data=None, external=None, stream=False):
+def execute(query, connection=None, data=None, external=None, stream=False, verify=True):
     host, params, files = prepare(query, connection, external=external)
 
     # default limits of HTTP url length, for details see:
@@ -45,7 +45,7 @@ def execute(query, connection=None, data=None, external=None, stream=False):
         data = params.pop('query', None)
 
     # basic auth
-    kwargs = dict(params=params, data=data, stream=stream, files=files)
+    kwargs = dict(params=params, data=data, stream=stream, files=files, verify=verify)
     if 'user' in params and 'password' in params:
         kwargs['auth'] = (params['user'], params['password'])
         del params['user']

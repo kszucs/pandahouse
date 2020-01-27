@@ -64,6 +64,10 @@ def to_dataframe(lines, keep_default_na=False, **kwargs):
 
     dtypes, parse_dates, converters = {}, [], {}
     for name, chtype in zip(names, types):
+        if chtype.startswith("DateTime("):
+            # Parse time zoned DateTimes as DateTime
+            chtype = "DateTime"
+
         dtype = CH2PD.get(chtype, 'object')
 
         if chtype.startswith("Array("):

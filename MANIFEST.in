@@ -1,2 +1,0 @@
-include versioneer.py
-include pandahouse/_version.py

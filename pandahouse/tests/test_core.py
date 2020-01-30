@@ -8,7 +8,7 @@ import pandas as pd
 from pandahouse.http import execute
 from pandahouse.core import to_clickhouse, read_clickhouse
 
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 
 @pytest.fixture(scope='module')
@@ -132,8 +132,8 @@ def test_write_read_column_order(connection, xyz2):
     query = 'SELECT * FROM {db}.xyz2 WHERE id=1;'
     df = read_clickhouse(query, connection=connection)
 
-    assert_frame_equal(df.reindex_axis(sorted(df.columns), axis=1),
-                       expected.reindex_axis(sorted(df.columns), axis=1))
+    assert_frame_equal(df.reindex(sorted(df.columns), axis=1),
+                       expected.reindex(sorted(df.columns), axis=1))
 
 
 def test_execute_long_query(decimals, connection):

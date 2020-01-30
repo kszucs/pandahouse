@@ -4,26 +4,26 @@ from .convert import normalize, partition, to_dataframe, to_csv
 
 
 def selection(query, tables=None, index=True):
-    query = query.strip().strip(';')
-    query = '{} FORMAT TSVWithNamesAndTypes'.format(query)
+    query = query.strip().strip(";")
+    query = "{} FORMAT TSVWithNamesAndTypes".format(query)
 
     external = {}
     tables = tables or {}
     for name, df in tables.items():
         dtypes, df = normalize(df, index=index)
         data = to_csv(df)
-        structure = ', '.join(map(' '.join, dtypes.items()))
+        structure = ", ".join(map(" ".join, dtypes.items()))
         external[name] = (structure, data)
 
     return query, external
 
 
 def insertion(df, table, index=True):
-    insert = 'INSERT INTO {db}.{table} ({columns}) FORMAT CSV'
+    insert = "INSERT INTO {db}.{table} ({columns}) FORMAT CSV"
     _, df = normalize(df, index=index)
 
-    columns = ', '.join(map(escape, df.columns))
-    query = insert.format(db='{db}', columns=columns, table=escape(table))
+    columns = ", ".join(map(escape, df.columns))
+    query = insert.format(db="{db}", columns=columns, table=escape(table))
 
     return query, df
 
@@ -53,8 +53,7 @@ def read_clickhouse(query, tables=None, index=True, connection=None, **kwargs):
     Additional keyword arguments passed to `pandas.read_csv`
     """
     query, external = selection(query, tables=tables, index=index)
-    lines = execute(query, external=external, stream=True,
-                    connection=connection)
+    lines = execute(query, external=external, stream=True, connection=connection)
     return to_dataframe(lines, **kwargs)
 
 

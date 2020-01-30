@@ -6,8 +6,13 @@ from toolz import valfilter, merge
 from .utils import escape
 
 
-_default = dict(host='http://localhost:8123', database='default',
-                user=None, password=None, verify_tls=True)
+_default = dict(
+    host="http://localhost:8123",
+    database="default",
+    user=None,
+    password=None,
+    verify_tls=True,
+)
 
 
 class ClickhouseException(Exception):
@@ -16,24 +21,26 @@ class ClickhouseException(Exception):
 
 def prepare(query, connection=None, external=None):
     connection = merge(_default, connection or {})
-    database = escape(connection['database'])
+    database = escape(connection["database"])
     query = query.format(db=database)
-    params = {'database': connection['database'],
-              'query': query,
-              'user': connection['user'],
-              'password': connection['password']}
+    params = {
+        "database": connection["database"],
+        "query": query,
+        "user": connection["user"],
+        "password": connection["password"],
+    }
     params = valfilter(lambda x: x, params)
 
     files = {}
     external = external or {}
     for name, (structure, serialized) in external.items():
-        params['{}_format'.format(name)] = 'CSV'
-        params['{}_structure'.format(name)] = structure
+        params["{}_format".format(name)] = "CSV"
+        params["{}_structure".format(name)] = structure
         files[name] = serialized
 
-    host = connection['host']
+    host = connection["host"]
 
-    return host, params, files, connection['verify_tls']
+    return host, params, files, connection["verify_tls"]
 
 
 def execute(query, connection=None, data=None, external=None, stream=False):
@@ -41,15 +48,15 @@ def execute(query, connection=None, data=None, external=None, stream=False):
 
     # default limits of HTTP url length, for details see:
     # https://clickhouse.yandex/docs/en/single/index.html#http-interface
-    if len(params['query']) >= 15000 and data is None:
-        data = params.pop('query', None)
+    if len(params["query"]) >= 15000 and data is None:
+        data = params.pop("query", None)
 
     # basic auth
     kwargs = dict(params=params, data=data, stream=stream, files=files)
-    if 'user' in params and 'password' in params:
-        kwargs['auth'] = (params['user'], params['password'])
-        del params['user']
-        del params['password']
+    if "user" in params and "password" in params:
+        kwargs["auth"] = (params["user"], params["password"])
+        del params["user"]
+        del params["password"]
 
     response = requests.post(host, verify=verify_tls, **kwargs)
 

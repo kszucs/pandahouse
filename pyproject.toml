@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "intelecy-pandahouse"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pandas interface for Clickhouse HTTP API"
 authors = ["Krisztián Szűcs <szucs.krisztian@gmail.com>", "Jonathan Camp <jonathan.camp@intelecy.com>"]
 license = "BSD-3-Clause"
@@ -15,7 +15,7 @@ exclude = ["pandahouse/tests"]
 python = "^3.6.1"
 toolz = "^0.10.0"
 requests = "^2.22.0"
-pandas = "^1.0.0"
+pandas = "^0.25.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.3.5"

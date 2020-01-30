@@ -9,8 +9,9 @@ poetry-test:
 	poetry run make test
 
 .PHONY: build
-build:
+build: check
 	poetry build -f wheel
 
 check:
 	poetry run black --check pandahouse
+	flake8 pandahouse

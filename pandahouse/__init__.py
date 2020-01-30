@@ -1,6 +1,6 @@
-from .core import read_clickhouse, to_clickhouse
-from .http import execute
-from .utils import escape
+from .core import read_clickhouse, to_clickhouse  # noqa: F401
+from .http import execute  # noqa: F401
+from .utils import escape  # noqa: F401
 
 from functools import lru_cache
 

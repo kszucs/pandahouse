@@ -105,7 +105,7 @@ def to_dataframe(lines, keep_default_na=False, **kwargs):
         dtype=dtypes,
         parse_dates=parse_dates,
         converters=converters,
-        na_values=set(),
+        na_values="\\N",
         keep_default_na=keep_default_na,
         **kwargs
     )

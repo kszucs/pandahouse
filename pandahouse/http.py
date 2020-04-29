@@ -17,7 +17,7 @@ class ClickhouseException(Exception):
 def prepare(query, connection=None, external=None):
     connection = merge(_default, connection or {})
     database = escape(connection['database'])
-    query = query.format(db=database)
+    query = query.replace('{db}', database)
     params = {'database': connection['database'],
               'query': query,
               'user': connection['user'],

@@ -1,0 +1,18 @@
+name: Test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.6, 3.7, 3.8]
+    env:
+      PYTHON_VERSION: ${{ matrix.python }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: docker-compose build pandahouse
+    - run: docker-compose run --rm pandahouse

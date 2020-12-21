@@ -1,10 +1,8 @@
 import requests
-
 from requests.exceptions import RequestException
-from toolz import valfilter, merge
+from toolz import merge, valfilter
 
 from .utils import escape
-
 
 _default = dict(host='http://localhost:8123', database='default',
                 user=None, password=None)
@@ -22,6 +20,7 @@ def prepare(query, connection=None, external=None):
               'query': query,
               'user': connection['user'],
               'password': connection['password']}
+
     params = valfilter(lambda x: x, params)
 
     files = {}
@@ -32,12 +31,13 @@ def prepare(query, connection=None, external=None):
         files[name] = serialized
 
     host = connection['host']
+    proxies = connection['proxies'] if 'proxies' in connection else None
 
-    return host, params, files
+    return host, params, files, proxies
 
 
 def execute(query, connection=None, data=None, external=None, stream=False, verify=True):
-    host, params, files = prepare(query, connection, external=external)
+    host, params, files, proxies = prepare(query, connection, external=external)
 
     # default limits of HTTP url length, for details see:
     # https://clickhouse.yandex/docs/en/single/index.html#http-interface
@@ -45,7 +45,8 @@ def execute(query, connection=None, data=None, external=None, stream=False, veri
         data = params.pop('query', None)
 
     # basic auth
-    kwargs = dict(params=params, data=data, stream=stream, files=files, verify=verify)
+    kwargs = dict(params=params, data=data, stream=stream, files=files, verify=verify, proxies=proxies)
+
     if 'user' in params and 'password' in params:
         kwargs['auth'] = (params['user'], params['password'])
         del params['user']

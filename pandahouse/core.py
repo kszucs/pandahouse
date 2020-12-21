@@ -1,6 +1,6 @@
+from .convert import normalize, partition, to_csv, to_dataframe
 from .http import execute
 from .utils import escape
-from .convert import normalize, partition, to_dataframe, to_csv
 
 
 def selection(query, tables=None, index=True):
@@ -28,7 +28,7 @@ def insertion(df, table, index=True):
     return query, df
 
 
-def read_clickhouse(query, tables=None, index=True, connection=None, verify=True,  **kwargs):
+def read_clickhouse(query, tables=None, index=True, connection=None, verify=True, **kwargs):
     """Reads clickhouse query to pandas dataframe
 
     Parameters
